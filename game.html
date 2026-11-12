@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Grand Slam Ping Pong</title>
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('1.1.jpg') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            touch-action: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 500px;
+            max-height: 850px;
+            background: rgba(116, 185, 255, 0.88);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 3px solid #ffffff;
+        }
+
+        /* --- 1. LOADING SCREEN --- */
+        #loadingScreen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #0984e3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+        }
+        .loading-dots {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .dot {
+            width: 18px;
+            height: 18px;
+            background-color: #fffa65;
+            border-radius: 50%;
+            animation: bounceDot 1.2s infinite ease-in-out both;
+        }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounceDot {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
+        .loading-text {
+            font-size: 30px;
+            font-weight: 900;
+            color: #fffa65;
+            letter-spacing: 2px;
+        }
+
+        /* --- 2. HOME SCREEN --- */
+        #homeScreen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 132, 227, 0.92);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            gap: 20px;
+        }
+        .live-preview-box {
+            position: relative;
+            width: 240px;
+            height: 280px;
+            background: #0066cc;
+            border: 4px solid #fffa65;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .home-title {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: #fffa65;
+            font-size: 32px;
+            font-weight: 900;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.4);
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .menu-buttons {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+        .circle-btn-play {
+            width: 75px;
+            height: 75px;
+            background: linear-gradient(135deg, #fffa65 0%, #ff9f43 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 0 #e67e22;
+            transition: transform 0.1s;
+        }
+        .circle-btn-play:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #e67e22;
+        }
+        .play-icon {
+            width: 0; 
+            height: 0; 
+            border-top: 14px solid transparent;
+            border-bottom: 14px solid transparent;
+            border-left: 22px solid #0984e3;
+            margin-left: 4px;
+        }
+        .circle-btn-settings {
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #fffa65 0%, #ff9f43 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 0 #e67e22;
+            font-size: 26px;
+            transition: transform 0.1s;
+        }
+        .circle-btn-settings:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #e67e22;
+        }
+
+        /* --- 3. SETTINGS MODAL --- */
+        #settingsModal {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 35;
+        }
+        .settings-card {
+            background-color: #ffffff;
+            border: 4px solid #0984e3;
+            width: 85%;
+            max-width: 320px;
+            padding: 30px 20px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .settings-card h3 {
+            color: #0984e3;
+            font-size: 26px;
+            font-weight: 900;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3436;
+        }
+        .toggle-btn {
+            background: #0984e3;
+            color: #ffffff;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #0066cc;
+        }
+        .toggle-btn.off {
+            background: #b2bec3;
+            color: #fff;
+            box-shadow: 0 4px 0 #636e72;
+        }
+        .close-settings {
+            background: #ff6b6b;
+            color: #ffffff;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 0 #c0392b;
+        }
+
+        /* --- 4. HOW TO PLAY INSTRUCTIONS --- */
+        #instructionScreen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 25;
+            padding: 20px;
+        }
+        .instruction-card {
+            background-color: #ffffff;
+            border: 4px solid #0984e3;
+            width: 85%;
+            max-width: 340px;
+            padding: 35px 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            border-radius: 14px;
+        }
+        .instruction-card h2 {
+            color: #0984e3;
+            font-size: 28px;
+            font-weight: 900;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .instruction-card p {
+            color: #2d3436;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        .tap-to-play {
+            background: linear-gradient(135deg, #fffa65 0%, #ff9f43 100%);
+            color: #2d3436;
+            border: none;
+            padding: 14px 35px;
+            font-size: 18px;
+            font-weight: 800;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #e67e22;
+        }
+        .tap-to-play:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #e67e22;
+        }
+
+        /* --- 5. GAME OVER SCREEN --- */
+        #gameOverScreen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 25;
+        }
+        .gameover-card {
+            background-color: #ffffff;
+            border: 4px solid #ff6b6b;
+            width: 85%;
+            max-width: 320px;
+            padding: 30px;
+            border-radius: 14px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .gameover-card h2 {
+            color: #ff6b6b;
+            margin-top: 0;
+            font-size: 32px;
+            font-weight: 900;
+        }
+        .gameover-card p {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3436;
+            margin: 15px 0 25px 0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        .go-btn {
+            background: #0984e3;
+            color: #ffffff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #0066cc;
+        }
+        .go-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #0066cc;
+        }
+
+        /* --- CANVAS --- */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #pauseBtn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 45px;
+            height: 45px;
+            background-color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 4px 0 #b2bec3;
+        }
+        .pause-bars {
+            width: 14px;
+            height: 16px;
+            border-left: 4px solid #0984e3;
+            border-right: 4px solid #0984e3;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="gameContainer">
+        <!-- Loading Screen -->
+        <div id="loadingScreen">
+            <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <div class="loading-text">PING PONG</div>
+        </div>
+
+        <!-- Home Screen -->
+        <div id="homeScreen">
+            <h2 class="home-title">GRAND SLAM PING PONG 2026</h2>
+            <div class="live-preview-box">
+                <canvas id="previewCanvas" width="240" height="280"></canvas>
+            </div>
+            <div class="menu-buttons">
+                <button class="circle-btn-play" onclick="showInstructions()">
+                    <div class="play-icon"></div>
+                </button>
+                <button class="circle-btn-settings" onclick="openSettings()">⚙️</button>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal">
+            <div class="settings-card">
+                <h3>SETTINGS</h3>
+                <div class="setting-row">
+                    <span>Sound Effects:</span>
+                    <button id="soundToggleBtn" class="toggle-btn" onclick="toggleSound()">ON</button>
+                </div>
+                <div class="setting-row">
+                    <span>Background Music:</span>
+                    <button id="musicToggleBtn" class="toggle-btn" onclick="toggleMusic()">ON</button>
+                </div>
+                <button class="close-settings" onclick="closeSettings()">CLOSE</button>
+            </div>
+        </div>
+
+        <!-- How To Play Instructions -->
+        <div id="instructionScreen">
+            <div class="instruction-card">
+                <h2>HOW TO PLAY</h2>
+                <p>Use Laptop Arrow Keys (← →) or Phone Touch & Drag to move paddle.<br><br>Hit slowly or quickly to control ball speed!</p>
+                <button class="tap-to-play" onclick="startActualGame()">TAP TO PLAY</button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen">
+            <div class="gameover-card">
+                <h2>GAME OVER</h2>
+                <p id="finalScoreText">Score: 0</p>
+                <div class="btn-group">
+                    <button class="go-btn" onclick="restartGame()">Play Again 🔄</button>
+                    <button class="go-btn" onclick="goHome()">🏠 Home</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="pauseBtn" onclick="togglePause()"><div class="pause-bars"></div></button>
+
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const previewCanvas = document.getElementById("previewCanvas");
+        const previewCtx = previewCanvas.getContext("2d");
+        const container = document.getElementById("gameContainer");
+        const loadingScreen = document.getElementById("loadingScreen");
+        const homeScreen = document.getElementById("homeScreen");
+        const instructionScreen = document.getElementById("instructionScreen");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const settingsModal = document.getElementById("settingsModal");
+        const pauseBtn = document.getElementById("pauseBtn");
+        const finalScoreText = document.getElementById("finalScoreText");
+
+        function resizeCanvas() {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let gameState = "LOADING"; 
+        let score = 0;
+        let soundEnabled = true;
+        let musicEnabled = true;
+
+        const gameImg = new Image();
+        gameImg.src = "1.1.jpg";
+
+        let audioCtx = null;
+        let musicInterval = null;
+
+        function startBgMusic() {
+            if (!musicEnabled) return;
+            if (musicInterval) clearInterval(musicInterval);
+            
+            musicInterval = setInterval(() => {
+                if (!musicEnabled || gameState !== "HOME") return;
+                try {
+                    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                    let notes = [261.63, 329.63, 392.00, 523.25];
+                    let note = notes[Math.floor(Math.random() * notes.length)];
+
+                    let osc = audioCtx.createOscillator();
+                    let gain = audioCtx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(note, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.8);
+                } catch(e) {}
+            }, 700);
+        }
+
+        function stopBgMusic() {
+            if (musicInterval) {
+                clearInterval(musicInterval);
+                musicInterval = null;
+            }
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+
+                if (type === "hit") {
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(450, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(700, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                } else if (type === "over") {
+                    osc.type = "sawtooth";
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                } else if (type === "party") {
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, audioCtx.currentTime + 0.25);
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                }
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            } catch (e) {}
+        }
+
+        let previewBall = { x: 120, y: 140, radius: 7, dx: 2, dy: -2.5 };
+        let previewPaddle = { x: 90, y: 245, width: 60, height: 16 };
+
+        function updatePreview() {
+            if (gameState !== "HOME") return;
+            previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+
+            if (gameImg.complete) {
+                previewCtx.drawImage(gameImg, 10, 10, previewCanvas.width - 20, previewCanvas.height - 20);
+                previewCtx.fillStyle = "rgba(116, 185, 255, 0.4)";
+                previewCtx.fillRect(10, 10, previewCanvas.width - 20, previewCanvas.height - 20);
+            }
+
+            previewCtx.strokeStyle = "#ffffff";
+            previewCtx.lineWidth = 4;
+            previewCtx.strokeRect(10, 10, previewCanvas.width - 20, previewCanvas.height - 20);
+
+            previewBall.x += previewBall.dx;
+            previewBall.y += previewBall.dy;
+            if (previewBall.x - previewBall.radius < 10 || previewBall.x + previewBall.radius > previewCanvas.width - 10) previewBall.dx = -previewBall.dx;
+            if (previewBall.y - previewBall.radius < 10 || (previewBall.y + previewBall.radius >= previewPaddle.y && previewBall.x >= previewPaddle.x && previewBall.x <= previewPaddle.x + previewPaddle.width)) {
+                previewBall.dy = -previewBall.dy;
+            }
+
+            previewPaddle.x += (previewBall.x - (previewPaddle.x + previewPaddle.width / 2)) * 0.1;
+
+            previewCtx.fillStyle = "#0984e3";
+            previewCtx.beginPath();
+            previewCtx.roundRect(previewPaddle.x, previewPaddle.y, previewPaddle.width, previewPaddle.height, 8);
+            previewCtx.fill();
+            previewCtx.strokeStyle = "#ffffff";
+            previewCtx.lineWidth = 2;
+            previewCtx.stroke();
+
+            previewCtx.fillStyle = "#000000";
+            previewCtx.beginPath();
+            previewCtx.arc(previewBall.x, previewBall.y, previewBall.radius, 0, Math.PI * 2);
+            previewCtx.fill();
+
+            requestAnimationFrame(updatePreview);
+        }
+
+        setTimeout(() => {
+            loadingScreen.style.display = "none";
+            homeScreen.style.display = "flex";
+            gameState = "HOME";
+            startBgMusic();
+            updatePreview();
+        }, 1800);
+
+        function showInstructions() {
+            stopBgMusic();
+            homeScreen.style.display = "none";
+            instructionScreen.style.display = "flex";
+            gameState = "INSTRUCTIONS";
+        }
+
+        function openSettings() {
+            settingsModal.style.display = "flex";
+        }
+
+        function closeSettings() {
+            settingsModal.style.display = "none";
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            let btn = document.getElementById("soundToggleBtn");
+            btn.innerText = soundEnabled ? "ON" : "OFF";
+            btn.className = soundEnabled ? "toggle-btn" : "toggle-btn off";
+        }
+
+        function toggleMusic() {
+            musicEnabled = !musicEnabled;
+            let btn = document.getElementById("musicToggleBtn");
+            btn.innerText = musicEnabled ? "ON" : "OFF";
+            btn.className = musicEnabled ? "toggle-btn" : "toggle-btn off";
+            if (musicEnabled && gameState === "HOME") {
+                startBgMusic();
+            } else {
+                stopBgMusic();
+            }
+        }
+
+        function startActualGame() {
+            stopBgMusic();
+            instructionScreen.style.display = "none";
+            pauseBtn.style.display = "flex";
+            score = 0;
+            gameState = "PLAYING";
+            resetBall();
+        }
+
+        function restartGame() {
+            gameOverScreen.style.display = "none";
+            score = 0;
+            gameState = "PLAYING";
+            resetBall();
+        }
+
+        function goHome() {
+            gameOverScreen.style.display = "none";
+            pauseBtn.style.display = "none";
+            homeScreen.style.display = "flex";
+            gameState = "HOME";
+            startBgMusic();
+            updatePreview();
+        }
+
+        function togglePause() {
+            if (gameState === "PLAYING") gameState = "PAUSED";
+            else if (gameState === "PAUSED") gameState = "PLAYING";
+        }
+
+        let player = { x: 140, y: 460, width: 100, height: 26 };
+        let ball = { x: 180, y: 260, radius: 10, speed: 4, dx: 2.5, dy: -3.5 };
+        let celebrationTimer = 0;
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            player.y = canvas.height - 60;
+            ball.dy = -3.5;
+            ball.speed = 4;
+        }
+
+        let keys = { left: false, right: false };
+
+        window.addEventListener("keydown", (e) => {
+            if (gameState !== "PLAYING") return;
+            if (e.key === "ArrowLeft") { keys.left = true; e.preventDefault(); }
+            if (e.key === "ArrowRight") { keys.right = true; e.preventDefault(); }
+        });
+
+        window.addEventListener("keyup", (e) => {
+            if (e.key === "ArrowLeft") keys.left = false;
+            if (e.key === "ArrowRight") keys.right = false;
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            if (gameState !== "PLAYING") return;
+            const rect = canvas.getBoundingClientRect();
+            player.x = (e.clientX - rect.left) - player.width / 2;
+        });
+
+        canvas.addEventListener("touchmove", (e) => {
+            if (gameState !== "PLAYING") return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            player.x = (e.touches[0].clientX - rect.left) - player.width / 2;
+        }, { passive: false });
+
+        function update() {
+            if (gameState !== "PLAYING") return;
+
+            if (keys.left) player.x -= 8;
+            if (keys.right) player.x += 8;
+
+            if (player.x < 20) player.x = 20;
+            if (player.x + player.width > canvas.width - 20) player.x = canvas.width - 20 - player.width;
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.x - ball.radius < 20 || ball.x + ball.radius > canvas.width - 20) {
+                ball.dx = -ball.dx;
+            }
+            if (ball.y - ball.radius < 20) {
+                ball.dy = -ball.dy;
+            }
+
+            if (
+                ball.y + ball.radius >= player.y &&
+                ball.y - ball.radius <= player.y + player.height &&
+                ball.x >= player.x &&
+                ball.x <= player.x + player.width
+            ) {
+                let hitPoint = ball.x - (player.x + player.width / 2);
+                ball.dx = hitPoint * 0.15;
+                ball.dy = -ball.dy;
+                score++;
+                playSound("hit");
+
+                if (score > 0 && score % 10 === 0) {
+                    celebrationTimer = 60;
+                    playSound("party");
+                }
+            }
+
+            if (ball.y > canvas.height) {
+                gameState = "GAMEOVER";
+                pauseBtn.style.display = "none";
+                playSound("over");
+                finalScoreText.innerText = "Score: " + score;
+                gameOverScreen.style.display = "flex";
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (gameState === "PLAYING" || gameState === "PAUSED") {
+                if (gameImg.complete) {
+                    ctx.drawImage(gameImg, 20, 20, canvas.width - 40, canvas.height - 40);
+                    ctx.fillStyle = "rgba(116, 185, 255, 0.4)";
+                    ctx.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
+                } else {
+                    ctx.fillStyle = "#74b9ff";
+                    ctx.fillRect(20, 20, canvas.width - 40, canvas.height - 40);
+                }
+
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 6;
+                ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 4;
+                ctx.setLineDash([10, 10]);
+                ctx.beginPath();
+                ctx.moveTo(20, canvas.height / 2);
+                ctx.lineTo(canvas.width - 20, canvas.height / 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Score in the middle with Poppins font
+                ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+                ctx.font = "900 120px 'Poppins', sans-serif";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(score, canvas.width / 2, canvas.height / 2);
+
+                if (celebrationTimer > 0) {
+                    celebrationTimer--;
+                    ctx.font = "bold 50px 'Poppins', sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.fillStyle = "#fffa65";
+                    ctx.fillText("🎉 " + score + " PTS! 🎉", canvas.width / 2, canvas.height / 2 - 80);
+                }
+
+                ctx.fillStyle = "#0984e3";
+                ctx.beginPath();
+                ctx.roundRect(player.x, player.y, player.width, player.height, 14);
+                ctx.fill();
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.fillStyle = "#000000";
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
